@@ -21,7 +21,7 @@
             background-color: var(--bg-color);
         }
         body {
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'Press+Start+2P', cursive;
             color: #ffffff;
             touch-action: none; /* Disables double-tap to zoom on mobile */
             display: flex;
@@ -60,21 +60,24 @@
         /* Desktop */
         @media (min-width: 768px) {
             #game-wrapper { flex-direction: row; gap: 32px; }
-            #ui-panel { display: flex; flex-direction: column; gap: 1rem; width: 192px; }
+            #bottom-panel { display: flex; flex-direction: column; gap: 1rem; width: 192px; }
             #mobile-controls { display: none; }
         }
         /* Mobile */
         @media (max-width: 767px) {
             #game-wrapper { flex-direction: column; gap: 8px; }
-            .game-board-container { flex-grow: 1; width: 100%; min-height: 0; } /* Key for flex sizing */
-            #ui-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; align-items: center; }
+            /* This is the key fix: The board container will grow to fill all available vertical space */
+            .game-board-container { flex: 1 1 0; width: 100%; min-height: 0; }
+            #bottom-panel { flex-shrink: 0; } /* Prevent the bottom panel from shrinking */
+            #ui-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; align-items: center; margin-bottom: 8px; }
             #info-boxes { display: contents; }
             #pause-btn { grid-column: 1 / -1; }
             #next-container { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #2a2a2a; border-radius: 0.5rem; padding: 4px;}
             .ui-text { font-size: 0.7rem; }
             .ui-value { font-size: 1.2rem; }
-            #mobile-controls .btn-control { width: 64px; height: 64px; } /* Smaller controls */
-            #mobile-controls .btn-control svg { width: 32px; height: 32px; } /* Smaller icons */
+            /* Reduced control and icon size for better balance */
+            #mobile-controls .btn-control { width: 56px; height: 56px; }
+            #mobile-controls .btn-control svg { width: 28px; height: 28px; }
 
         }
     </style>
@@ -90,46 +93,48 @@
             </div>
         </div>
 
-        <!-- Right Panel: Info -->
-        <div id="ui-panel">
-            <div id="info-boxes">
-                <div class="text-center p-2 bg-gray-800 rounded-lg">
-                    <h2 class="text-lg uppercase ui-text">Score</h2>
-                    <p id="score" class="text-3xl text-yellow-400 ui-value">0</p>
+        <!-- Panel for UI and Mobile Controls -->
+        <div id="bottom-panel">
+            <!-- Info Panel -->
+            <div id="ui-panel">
+                <div id="info-boxes">
+                    <div class="text-center p-2 bg-gray-800 rounded-lg">
+                        <h2 class="text-lg uppercase ui-text">Score</h2>
+                        <p id="score" class="text-3xl text-yellow-400 ui-value">0</p>
+                    </div>
+                    <div id="next-container">
+                        <h2 class="text-lg uppercase ui-text">Next</h2>
+                        <canvas id="nextCanvas"></canvas>
+                    </div>
+                    <div class="text-center p-2 bg-gray-800 rounded-lg">
+                        <h2 class="text-lg uppercase ui-text">Level</h2>
+                        <p id="level" class="text-3xl text-green-400 ui-value">1</p>
+                    </div>
                 </div>
-                <div id="next-container">
-                    <h2 class="text-lg uppercase ui-text">Next</h2>
-                    <canvas id="nextCanvas"></canvas>
-                </div>
-                <div class="text-center p-2 bg-gray-800 rounded-lg">
-                    <h2 class="text-lg uppercase ui-text">Level</h2>
-                    <p id="level" class="text-3xl text-green-400 ui-value">1</p>
-                </div>
-            </div>
-            
-            <button id="pause-btn" class="mt-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg uppercase transition w-full">
-                Pause
-            </button>
-        </div>
-        
-        <!-- Mobile Controls are separate for layout purposes -->
-        <div id="mobile-controls" class="grid grid-cols-3 gap-2 w-full max-w-xs">
-            <div class="col-span-3 flex justify-center">
-                <button id="rotate-btn" class="btn-control rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"/></svg>
+                
+                <button id="pause-btn" class="mt-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg uppercase transition w-full">
+                    Pause
                 </button>
             </div>
-            <button id="left-btn" class="btn-control rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            </button>
-            <button id="down-btn" class="btn-control rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <button id="right-btn" class="btn-control rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </button>
+            
+            <!-- Mobile Controls -->
+            <div id="mobile-controls" class="grid grid-cols-3 gap-2 w-full max-w-xs mx-auto">
+                <div class="col-span-3 flex justify-center">
+                    <button id="rotate-btn" class="btn-control rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"/></svg>
+                    </button>
+                </div>
+                <button id="left-btn" class="btn-control rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <button id="down-btn" class="btn-control rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <button id="right-btn" class="btn-control rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
         </div>
-
     </div>
 
     <!-- Game Over Modal -->
@@ -186,6 +191,7 @@
         // --- Game Setup and Core Functions ---
         function resizeGame() {
             const boardContainer = document.querySelector('.game-board-container');
+            // We measure the container, which CSS has already sized appropriately
             const availableWidth = boardContainer.clientWidth - 8; // Subtract border width
             const availableHeight = boardContainer.clientHeight - 8;
 
@@ -193,9 +199,7 @@
             const blockSizeFromHeight = Math.floor(availableHeight / ROWS);
             BLOCK_SIZE = Math.min(blockSizeFromWidth, blockSizeFromHeight);
             
-            // Re-enable scaling context if it was reset.
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform before scaling
             canvas.width = COLS * BLOCK_SIZE;
             canvas.height = ROWS * BLOCK_SIZE;
             ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
@@ -204,8 +208,7 @@
             nextCanvas.width = nextCanvasSize;
             nextCanvas.height = nextCanvasSize;
             
-            // Re-enable scaling context for next piece
-            nextCtx.setTransform(1, 0, 0, 1, 0, 0);
+            nextCtx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform for next piece
             nextCtx.scale(nextCanvasSize / 6, nextCanvasSize / 6);
             
             // Redraw game state after resize
