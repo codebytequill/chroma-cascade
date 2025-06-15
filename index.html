@@ -16,7 +16,7 @@
             --ui-bg-color: #2a2a2a;
         }
         html, body {
-            height: 100%;
+            height: 100vh; /* Use viewport height */
             overflow: hidden;
             background-color: var(--bg-color);
         }
@@ -40,6 +40,9 @@
             border: 4px solid var(--border-color);
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
             background-color: var(--board-bg-color);
+            display: flex; /* Allow canvas to be centered */
+            align-items: center;
+            justify-content: center;
         }
         #gameCanvas { display: block; }
 
@@ -62,13 +65,17 @@
         }
         /* Mobile */
         @media (max-width: 767px) {
-            #game-wrapper { flex-direction: column; gap: 16px; justify-content: space-evenly; }
+            #game-wrapper { flex-direction: column; gap: 8px; }
+            .game-board-container { flex-grow: 1; width: 100%; min-height: 0; } /* Key for flex sizing */
             #ui-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; align-items: center; }
             #info-boxes { display: contents; }
             #pause-btn { grid-column: 1 / -1; }
-            #next-container { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #2a2a2a; border-radius: 0.5rem; padding: 8px;}
+            #next-container { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #2a2a2a; border-radius: 0.5rem; padding: 4px;}
             .ui-text { font-size: 0.7rem; }
             .ui-value { font-size: 1.2rem; }
+            #mobile-controls .btn-control { width: 64px; height: 64px; } /* Smaller controls */
+            #mobile-controls .btn-control svg { width: 32px; height: 32px; } /* Smaller icons */
+
         }
     </style>
 </head>
@@ -83,7 +90,7 @@
             </div>
         </div>
 
-        <!-- Right Panel: Info & Mobile Controls -->
+        <!-- Right Panel: Info -->
         <div id="ui-panel">
             <div id="info-boxes">
                 <div class="text-center p-2 bg-gray-800 rounded-lg">
@@ -108,18 +115,18 @@
         <!-- Mobile Controls are separate for layout purposes -->
         <div id="mobile-controls" class="grid grid-cols-3 gap-2 w-full max-w-xs">
             <div class="col-span-3 flex justify-center">
-                <button id="rotate-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"/></svg>
+                <button id="rotate-btn" class="btn-control rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"/></svg>
                 </button>
             </div>
-            <button id="left-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            <button id="left-btn" class="btn-control rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             </button>
-            <button id="down-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <button id="down-btn" class="btn-control rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
-            <button id="right-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <button id="right-btn" class="btn-control rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </button>
         </div>
 
@@ -178,29 +185,16 @@
         
         // --- Game Setup and Core Functions ---
         function resizeGame() {
-            const screenHeight = window.innerHeight;
-            const screenWidth = window.innerWidth;
-            const isMobile = screenWidth < 767;
+            const boardContainer = document.querySelector('.game-board-container');
+            const availableWidth = boardContainer.clientWidth - 8; // Subtract border width
+            const availableHeight = boardContainer.clientHeight - 8;
 
-            const padding = 16;
-            let availableWidth = screenWidth - (padding * 2);
-            let availableHeight = screenHeight - (padding * 2);
-            
-            if (isMobile) {
-                // On mobile, UI panels take up vertical space
-                const uiPanel = document.getElementById('ui-panel');
-                const mobileControls = document.getElementById('mobile-controls');
-                availableHeight -= (uiPanel.offsetHeight + mobileControls.offsetHeight + 32); // 16px gaps
-            } else {
-                // On desktop, UI panel takes up horizontal space
-                const uiPanel = document.getElementById('ui-panel');
-                availableWidth -= (uiPanel.offsetWidth + 32); // 32px gap
-            }
-
-            // Calculate block size based on the limiting dimension (width or height)
             const blockSizeFromWidth = Math.floor(availableWidth / COLS);
             const blockSizeFromHeight = Math.floor(availableHeight / ROWS);
             BLOCK_SIZE = Math.min(blockSizeFromWidth, blockSizeFromHeight);
+            
+            // Re-enable scaling context if it was reset.
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
 
             canvas.width = COLS * BLOCK_SIZE;
             canvas.height = ROWS * BLOCK_SIZE;
@@ -209,6 +203,9 @@
             const nextCanvasSize = BLOCK_SIZE * 4;
             nextCanvas.width = nextCanvasSize;
             nextCanvas.height = nextCanvasSize;
+            
+            // Re-enable scaling context for next piece
+            nextCtx.setTransform(1, 0, 0, 1, 0, 0);
             nextCtx.scale(nextCanvasSize / 6, nextCanvasSize / 6);
             
             // Redraw game state after resize
@@ -378,6 +375,7 @@
 
         // --- Drawing Functions ---
         function draw() {
+            if (!ctx) return;
             ctx.fillStyle = '#1a1a1a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             drawMatrix(ctx, board, { x: 0, y: 0 });
@@ -388,6 +386,7 @@
         }
 
         function drawNext() {
+            if (!nextCtx) return;
             nextCtx.fillStyle = '#2a2a2a';
             nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
             if (nextPiece) {
@@ -461,7 +460,10 @@
         
         // --- Start Game ---
         window.addEventListener('resize', resizeGame);
-        resetGame();
+        // Use a small timeout to ensure layout is calculated before first resize
+        setTimeout(() => {
+            resetGame();
+        }, 100);
 
     </script>
 </body>
