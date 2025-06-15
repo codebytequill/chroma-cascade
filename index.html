@@ -9,101 +9,120 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            --bg-color: #121212;
+            --board-bg-color: #1a1a1a;
+            --border-color: #333;
+            --ui-bg-color: #2a2a2a;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+        }
         body {
             font-family: 'Press Start 2P', cursive;
-            background-color: #121212;
             color: #ffffff;
-            overflow: hidden; /* Prevents scrollbars from appearing */
-            height: 100vh;
             touch-action: none; /* Disables double-tap to zoom on mobile */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #game-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
         }
         .game-board-container {
-            border: 4px solid #333;
+            border: 4px solid var(--border-color);
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            background-color: var(--board-bg-color);
         }
-        #gameCanvas {
-            background-color: #1a1a1a;
-            display: block; /* Removes baseline margin */
-        }
+        #gameCanvas { display: block; }
+
         .btn-control {
             background-color: #333;
             border: 2px solid #555;
             transition: all 0.2s ease;
             user-select: none; /* Prevents text selection on rapid taps */
         }
-        .btn-control:active {
-            background-color: #555;
-            transform: scale(0.95);
+        .btn-control:active { background-color: #555; transform: scale(0.95); }
+        .modal-bg { background-color: rgba(0, 0, 0, 0.7); }
+        .modal-content { background-color: var(--ui-bg-color); border: 4px solid #444; }
+
+        /* --- Layout --- */
+        /* Desktop */
+        @media (min-width: 768px) {
+            #game-wrapper { flex-direction: row; gap: 32px; }
+            #ui-panel { display: flex; flex-direction: column; gap: 1rem; width: 192px; }
+            #mobile-controls { display: none; }
         }
-        .modal-bg {
-            background-color: rgba(0, 0, 0, 0.7);
-        }
-        .modal-content {
-            background-color: #2a2a2a;
-            border: 4px solid #444;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
-        }
-        /* Make UI text smaller on small screens */
-        @media (max-width: 768px) {
-            .ui-text { font-size: 0.8rem; }
-            .ui-value { font-size: 1.5rem; }
+        /* Mobile */
+        @media (max-width: 767px) {
+            #game-wrapper { flex-direction: column; gap: 16px; justify-content: space-evenly; }
+            #ui-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; align-items: center; }
+            #info-boxes { display: contents; }
+            #pause-btn { grid-column: 1 / -1; }
+            #next-container { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #2a2a2a; border-radius: 0.5rem; padding: 8px;}
+            .ui-text { font-size: 0.7rem; }
+            .ui-value { font-size: 1.2rem; }
         }
     </style>
 </head>
-<body class="flex items-center justify-center">
-
-    <div class="w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-center gap-2 md:gap-8 p-2">
-
+<body>
+    <div id="game-wrapper">
         <!-- Game Board -->
         <div class="game-board-container relative rounded-lg overflow-hidden">
             <canvas id="gameCanvas"></canvas>
             <!-- Pause Overlay -->
             <div id="pauseOverlay" class="absolute inset-0 bg-black bg-opacity-75 flex-col items-center justify-center text-center hidden">
                 <h2 class="text-5xl text-white uppercase animate-pulse">Paused</h2>
-                <p class="text-md text-gray-300 mt-4">Press 'P' to Resume</p>
             </div>
         </div>
 
-        <!-- Game Info & Controls -->
-        <div class="flex flex-col items-center gap-2 w-full md:w-auto">
-            
-            <div class="text-center p-2 md:p-4 bg-gray-800 rounded-lg w-full md:w-48">
-                <h2 class="text-lg uppercase ui-text">Score</h2>
-                <p id="score" class="text-3xl text-yellow-400 ui-value">0</p>
+        <!-- Right Panel: Info & Mobile Controls -->
+        <div id="ui-panel">
+            <div id="info-boxes">
+                <div class="text-center p-2 bg-gray-800 rounded-lg">
+                    <h2 class="text-lg uppercase ui-text">Score</h2>
+                    <p id="score" class="text-3xl text-yellow-400 ui-value">0</p>
+                </div>
+                <div id="next-container">
+                    <h2 class="text-lg uppercase ui-text">Next</h2>
+                    <canvas id="nextCanvas"></canvas>
+                </div>
+                <div class="text-center p-2 bg-gray-800 rounded-lg">
+                    <h2 class="text-lg uppercase ui-text">Level</h2>
+                    <p id="level" class="text-3xl text-green-400 ui-value">1</p>
+                </div>
             </div>
             
-            <div class="text-center p-2 md:p-4 bg-gray-800 rounded-lg w-full md:w-48">
-                <h2 class="text-lg uppercase ui-text">Next</h2>
-                <canvas id="nextCanvas"></canvas>
-            </div>
-            
-            <div class="text-center p-2 md:p-4 bg-gray-800 rounded-lg w-full md:w-48">
-                <h2 class="text-lg uppercase ui-text">Level</h2>
-                <p id="level" class="text-3xl text-green-400 ui-value">1</p>
-            </div>
-            
-            <button id="pause-btn" class="mt-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg uppercase transition w-full md:w-48">
+            <button id="pause-btn" class="mt-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg uppercase transition w-full">
                 Pause
             </button>
-
-            <!-- Mobile Controls -->
-            <div class="grid grid-cols-3 gap-2 md:hidden w-full max-w-xs mt-2">
-                <div class="col-span-3 flex justify-center">
-                    <button id="rotate-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"/></svg>
-                    </button>
-                </div>
-                <button id="left-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <button id="down-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
-                <button id="right-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </div>
+        
+        <!-- Mobile Controls are separate for layout purposes -->
+        <div id="mobile-controls" class="grid grid-cols-3 gap-2 w-full max-w-xs">
+            <div class="col-span-3 flex justify-center">
+                <button id="rotate-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"/></svg>
                 </button>
             </div>
+            <button id="left-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button id="down-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <button id="right-btn" class="btn-control w-20 h-20 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
         </div>
+
     </div>
 
     <!-- Game Over Modal -->
@@ -161,20 +180,28 @@
         function resizeGame() {
             const screenHeight = window.innerHeight;
             const screenWidth = window.innerWidth;
-            const mainContainer = document.querySelector('.w-full.max-w-4xl');
+            const isMobile = screenWidth < 767;
 
-            let canvasWidth;
-            if (screenWidth < 768) { // Mobile layout
-                mainContainer.style.flexDirection = 'column';
-                canvasWidth = screenWidth * 0.9;
-                BLOCK_SIZE = Math.floor(canvasWidth / COLS);
-            } else { // Desktop layout
-                 mainContainer.style.flexDirection = 'row';
-                 // Limit height on desktop to fit controls
-                 const maxCanvasHeight = screenHeight * 0.8; 
-                 BLOCK_SIZE = Math.floor(maxCanvasHeight / ROWS);
-            }
+            const padding = 16;
+            let availableWidth = screenWidth - (padding * 2);
+            let availableHeight = screenHeight - (padding * 2);
             
+            if (isMobile) {
+                // On mobile, UI panels take up vertical space
+                const uiPanel = document.getElementById('ui-panel');
+                const mobileControls = document.getElementById('mobile-controls');
+                availableHeight -= (uiPanel.offsetHeight + mobileControls.offsetHeight + 32); // 16px gaps
+            } else {
+                // On desktop, UI panel takes up horizontal space
+                const uiPanel = document.getElementById('ui-panel');
+                availableWidth -= (uiPanel.offsetWidth + 32); // 32px gap
+            }
+
+            // Calculate block size based on the limiting dimension (width or height)
+            const blockSizeFromWidth = Math.floor(availableWidth / COLS);
+            const blockSizeFromHeight = Math.floor(availableHeight / ROWS);
+            BLOCK_SIZE = Math.min(blockSizeFromWidth, blockSizeFromHeight);
+
             canvas.width = COLS * BLOCK_SIZE;
             canvas.height = ROWS * BLOCK_SIZE;
             ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
@@ -223,6 +250,7 @@
             pauseBtn.innerText = 'Pause';
             pauseBtn.disabled = false;
             
+            resizeGame(); // Initial size calculation
             gameLoop();
         }
 
@@ -353,12 +381,14 @@
             ctx.fillStyle = '#1a1a1a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             drawMatrix(ctx, board, { x: 0, y: 0 });
-            drawMatrix(ctx, currentPiece.matrix, currentPiece.pos, true);
+            if (currentPiece) {
+                drawMatrix(ctx, currentPiece.matrix, currentPiece.pos, true);
+            }
             drawGrid();
         }
 
         function drawNext() {
-            nextCtx.fillStyle = '#1a1a1a';
+            nextCtx.fillStyle = '#2a2a2a';
             nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
             if (nextPiece) {
                 const { matrix } = nextPiece;
@@ -394,6 +424,7 @@
         // --- Game Loop ---
         function gameLoop(time = 0) {
             if (isGameOver || isPaused) return;
+            if (!lastTime) lastTime = time;
             const deltaTime = time - lastTime;
             lastTime = time;
             dropCounter += deltaTime;
@@ -415,6 +446,7 @@
         function addTouchListener(element, action) {
             element.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 if (!isPaused && !isGameOver) { action(); }
             }, { passive: false });
         }
@@ -424,12 +456,11 @@
         addTouchListener(document.getElementById('down-btn'), pieceDrop);
         addTouchListener(document.getElementById('rotate-btn'), handleRotate);
         
-        pauseBtn.addEventListener('click', togglePause); // Click is fine for non-gameplay buttons
+        pauseBtn.addEventListener('click', togglePause);
         playAgainBtn.addEventListener('click', resetGame);
         
         // --- Start Game ---
         window.addEventListener('resize', resizeGame);
-        resizeGame();
         resetGame();
 
     </script>
