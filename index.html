@@ -45,7 +45,7 @@
 </head>
 <body class="flex items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 p-4">
+    <div class="w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 p-4">
 
         <!-- Game Board -->
         <div class="game-board-container relative rounded-lg overflow-hidden">
@@ -60,22 +60,22 @@
         <!-- Game Info & Controls -->
         <div class="flex flex-col items-center gap-4 w-full md:w-auto">
             
-            <div class="text-center p-4 bg-gray-800 rounded-lg w-full md:w-48">
-                <h2 class="text-lg uppercase">Score</h2>
-                <p id="score" class="text-3xl text-yellow-400">0</p>
+            <div class="text-center p-4 bg-gray-800 rounded-lg w-full md:w-56">
+                <h2 class="text-xl uppercase">Score</h2>
+                <p id="score" class="text-4xl text-yellow-400">0</p>
             </div>
             
-            <div class="text-center p-4 bg-gray-800 rounded-lg w-full md:w-48">
-                <h2 class="text-lg uppercase">Next</h2>
-                <canvas id="nextCanvas" width="120" height="120"></canvas>
+            <div class="text-center p-4 bg-gray-800 rounded-lg w-full md:w-56">
+                <h2 class="text-xl uppercase">Next</h2>
+                <canvas id="nextCanvas" width="140" height="140"></canvas>
             </div>
             
-            <div class="text-center p-4 bg-gray-800 rounded-lg w-full md:w-48">
-                <h2 class="text-lg uppercase">Level</h2>
-                <p id="level" class="text-3xl text-green-400">1</p>
+            <div class="text-center p-4 bg-gray-800 rounded-lg w-full md:w-56">
+                <h2 class="text-xl uppercase">Level</h2>
+                <p id="level" class="text-4xl text-green-400">1</p>
             </div>
             
-            <button id="pause-btn" class="mt-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg text-lg uppercase transition w-full md:w-48">
+            <button id="pause-btn" class="mt-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg text-lg uppercase transition w-full md:w-56">
                 Pause
             </button>
 
@@ -120,7 +120,7 @@
         // --- Game Constants ---
         const COLS = 10;
         const ROWS = 20;
-        const BLOCK_SIZE = 30; // Size of each square in the grid
+        const BLOCK_SIZE = 35; // Increased size for better desktop view
         const LEVEL_UP_LINES = 10; // Lines to clear for next level
 
         // Adjust canvas size based on constants
